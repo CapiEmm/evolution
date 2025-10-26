@@ -636,7 +636,7 @@ export class BaileysStartupService extends ChannelStartupService {
       maxMsgRetryCount: 4,
       fireInitQueries: true,
       connectTimeoutMs: 60_000,
-      keepAliveIntervalMs: 10_000,
+      keepAliveIntervalMs: 5_000, // Reduced to 5s to prevent WebSocket timeout in production
       qrTimeout: 45_000,
       emitOwnEvents: false,
       shouldIgnoreJid: (jid) => {
@@ -1758,6 +1758,11 @@ export class BaileysStartupService extends ChannelStartupService {
 
         if (events['messages.upsert']) {
           const payload = events['messages.upsert'];
+
+          // Log timestamp to diagnose message batching issues
+          this.logger.verbose(
+            `Received ${payload.messages.length} message(s) from WebSocket at ${new Date().toISOString()}`,
+          );
 
           this.messageProcessor.processMessage(payload, settings);
           // this.messageHandle['messages.upsert'](payload, settings);
