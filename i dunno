@@ -1,0 +1,41 @@
+https://your-app.railway.app/message/sendText/{{ $json.instanceName }}
+```
+
+**B. Update Group ID:**
+- Click on **"Prepare WhatsApp Message"** node
+- Update `groupId` value to your actual WhatsApp group ID:
+```
+  120363391136052944@g.us
+```
+
+**C. Update Instance Name:**
+- In the same node, update `instanceName` to match what you created in Evolution API (default: `mywhatsapp`)
+
+### **Step 4: Set Up Microsoft 365 Credentials**
+- Click on **"Get Unread Emails"** node
+- Add your Microsoft 365 OAuth2 credentials (same as before)
+
+---
+
+## **PART 6: Test the Workflow**
+
+1. **Send a test email** to your Microsoft 365 account
+   - Subject must contain "alert" (or change the filter)
+   - Leave it **unread**
+
+2. **Click "Execute Workflow"** in n8n
+
+3. **Check your WhatsApp group** - you should see the message! 🎉
+
+---
+
+## **Quick Troubleshooting:**
+
+**If Evolution API URL doesn't work:**
+```
+POST https://your-app.railway.app/message/sendText/mywhatsapp
+Headers: apikey: your-api-key
+Body: {
+  "number": "120363391136052944@g.us",
+  "text": "Test message"
+}
