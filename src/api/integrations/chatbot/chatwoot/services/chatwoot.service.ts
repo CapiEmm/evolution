@@ -2240,7 +2240,7 @@ export class ChatwootService {
       //  DELETE 
       // Hard delete quando habilitado; senão cria placeholder "apagada pelo remetente"
       if (event === Events.MESSAGES_DELETE) {
-        // Anti-dup local (process-wide) por 15s
+        // Anti-dup local por 15s
         const dedupKey = `cw_del_${instance.instanceId}_${body?.key?.id}`;
         const g = (global as any);
         if (!g.__cwDel) g.__cwDel = new Map<string, number>();
@@ -2302,14 +2302,14 @@ export class ChatwootService {
         }
       }
 
-      // === EDIT ================================================================
+      // EDIT 
       // Cria "Mensagem editada: <texto>" SOMENTE se houver texto (evita 'undefined')
       // Se vier "edit" sem texto (REVOKE mascarado), não faz nada aqui — o bloco de DELETE trata.
       if (event === 'messages.edit' || event === 'send.message.update') {
         const editedMessageContentRaw =
           body?.editedMessage?.conversation ??
           body?.editedMessage?.extendedTextMessage?.text ??
-          body?.editedMessage?.imageMessage?.caption ??
+          body?.editedMessage?.imageMessage?.caption ?? //trata edições no caption
           body?.editedMessage?.videoMessage?.caption ??
           body?.editedMessage?.documentMessage?.caption ??
           (typeof body?.text === 'string' ? body.text : undefined);

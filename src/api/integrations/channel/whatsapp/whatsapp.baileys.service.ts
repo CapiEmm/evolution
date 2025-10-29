@@ -1312,7 +1312,7 @@ export class BaileysStartupService extends ChannelStartupService {
               console.log("requested on-demand sync, id=", messageId);
             }
           }
-          // === EDIT/DELETE (Baileys) — sem duplicação e sem texto no WhatsApp ===
+          // EDIT/DELETE (Baileys) — sem duplicação e sem texto no WhatsApp 
           const protocolMsg: any =
             received?.message?.protocolMessage ||
             received?.message?.editedMessage?.message?.protocolMessage;
@@ -1320,7 +1320,7 @@ export class BaileysStartupService extends ChannelStartupService {
           const isStubRevoke =
             received?.messageStubType === proto.WebMessageInfo.StubType.REVOKE;
 
-          // 1) DELETE (somente via StubType) ----------------------------------------
+          // DELETE (somente via StubType) 
           if (isStubRevoke) {
             const keyToSearch: any = received?.key ?? {};
             const status = 'DELETED';
@@ -1390,7 +1390,7 @@ export class BaileysStartupService extends ChannelStartupService {
             continue; // não cai no MESSAGES_UPSERT
           }
 
-          // 2) EDIT (somente quando NÃO for REVOKE) ----------------------------------
+          // EDIT (somente quando NÃO for REVOKE)
           if (protocolMsg && protocolMsg.type !== proto.Message.ProtocolMessage.Type.REVOKE) {
             const payloadToProcess: any = protocolMsg;
             const keyToSearch: any = payloadToProcess?.key ?? received?.key;
@@ -1466,7 +1466,7 @@ export class BaileysStartupService extends ChannelStartupService {
 
             continue; // não cai no MESSAGES_UPSERT
           }
-          // === FIM EDIT/DELETE (Baileys) ============================================
+          //  FIM EDIT/DELETE (Baileys)
           // flag local só pra deduplicar nesse bloco normal de upsert
           const isEditOrDelete = !!protocolMsg || (received?.messageStubType === proto.WebMessageInfo.StubType.REVOKE);
 
@@ -1488,7 +1488,7 @@ export class BaileysStartupService extends ChannelStartupService {
           ) {
             continue;
           }
-          // ✅ lock otimista contra duplicação na 1ª mensagem da conversa
+          // lock otimista contra duplicação na 1ª mensagem da conversa
           const lockKey = `lock_${messageKey}`;
           const hasLock = await this.baileysCache.get(lockKey);
           if (hasLock) {
