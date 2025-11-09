@@ -101,7 +101,6 @@ src/
 - Connection lifecycle management per instance with automatic reconnection
 
 **Chatbot Integrations** (`src/api/integrations/chatbot/`):
-- **EvolutionBot**: Native chatbot with trigger system
 - **Chatwoot**: Customer service platform integration
 - **Typebot**: Visual chatbot flow builder
 - **OpenAI**: AI capabilities including GPT and Whisper (audio transcription)
