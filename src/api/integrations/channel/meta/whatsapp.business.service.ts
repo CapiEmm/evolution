@@ -20,7 +20,7 @@ import { chatbotController } from '@api/server.module';
 import { CacheService } from '@api/services/cache.service';
 import { ChannelStartupService } from '@api/services/channel.service';
 import { Events, wa } from '@api/types/wa.types';
-import { AudioConverter, Chatwoot, ConfigService, Database, Openai, S3, WaBusiness } from '@config/env.config';
+import { AudioConverter, ConfigService, Database, S3, WaBusiness } from '@config/env.config';
 import { BadRequestException, InternalServerErrorException } from '@exceptions';
 import { createJid } from '@utils/createJid';
 import { status } from '@utils/renderStatus';
@@ -128,8 +128,6 @@ export class BusinessStartupService extends ChannelStartupService {
     const content = data.entry[0].changes[0].value;
 
     try {
-      this.loadChatwoot();
-
       this.eventHandler(content);
 
       this.phoneNumber = createJid(content.messages ? content.messages[0].from : content.statuses[0]?.recipient_id);
@@ -516,38 +514,6 @@ export class BusinessStartupService extends ChannelStartupService {
 
                 messageRaw.message.mediaUrl = mediaUrl;
                 messageRaw.message.base64 = buffer.data.toString('base64');
-
-                // Processar OpenAI speech-to-text para áudio após o mediaUrl estar disponível
-                if (this.configService.get<Openai>('OPENAI').ENABLED && mediaType === 'audio') {
-                  const openAiDefaultSettings = await this.prismaRepository.openaiSetting.findFirst({
-                    where: {
-                      instanceId: this.instanceId,
-                    },
-                    include: {
-                      OpenaiCreds: true,
-                    },
-                  });
-
-                  if (
-                    openAiDefaultSettings &&
-                    openAiDefaultSettings.openaiCredsId &&
-                    openAiDefaultSettings.speechToText
-                  ) {
-                    try {
-                      messageRaw.message.speechToText = `[audio] ${await this.openaiService.speechToText(
-                        openAiDefaultSettings.OpenaiCreds,
-                        {
-                          message: {
-                            mediaUrl: messageRaw.message.mediaUrl,
-                            ...messageRaw,
-                          },
-                        },
-                      )}`;
-                    } catch (speechError) {
-                      this.logger.error(`Error processing speech-to-text: ${speechError}`);
-                    }
-                  }
-                }
               }
             } catch (error) {
               this.logger.error(['Error on upload file to minio', error?.message, error?.stack]);
@@ -555,34 +521,6 @@ export class BusinessStartupService extends ChannelStartupService {
           } else {
             const buffer = await this.downloadMediaMessage(received?.messages[0]);
             messageRaw.message.base64 = buffer.toString('base64');
-
-            // Processar OpenAI speech-to-text para áudio mesmo sem S3
-            if (this.configService.get<Openai>('OPENAI').ENABLED && message.type === 'audio') {
-              const openAiDefaultSettings = await this.prismaRepository.openaiSetting.findFirst({
-                where: {
-                  instanceId: this.instanceId,
-                },
-                include: {
-                  OpenaiCreds: true,
-                },
-              });
-
-              if (openAiDefaultSettings && openAiDefaultSettings.openaiCredsId && openAiDefaultSettings.speechToText) {
-                try {
-                  messageRaw.message.speechToText = `[audio] ${await this.openaiService.speechToText(
-                    openAiDefaultSettings.OpenaiCreds,
-                    {
-                      message: {
-                        base64: messageRaw.message.base64,
-                        ...messageRaw,
-                      },
-                    },
-                  )}`;
-                } catch (speechError) {
-                  this.logger.error(`Error processing speech-to-text: ${speechError}`);
-                }
-              }
-            }
           }
         } else if (received?.messages[0].interactive) {
           messageRaw = {
@@ -666,20 +604,6 @@ export class BusinessStartupService extends ChannelStartupService {
           pushName: messageRaw.pushName,
         });
 
-        if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled) {
-          const chatwootSentMessage = await this.chatwootService.eventWhatsapp(
-            Events.MESSAGES_UPSERT,
-            { instanceName: this.instance.name, instanceId: this.instanceId },
-            messageRaw,
-          );
-
-          if (chatwootSentMessage?.id) {
-            messageRaw.chatwootMessageId = chatwootSentMessage.id;
-            messageRaw.chatwootInboxId = chatwootSentMessage.id;
-            messageRaw.chatwootConversationId = chatwootSentMessage.id;
-          }
-        }
-
         if (!this.isMediaMessage(message) && message.type !== 'sticker') {
           await this.prismaRepository.message.create({
             data: messageRaw,
@@ -710,14 +634,6 @@ export class BusinessStartupService extends ChannelStartupService {
           };
 
           this.sendDataWebhook(Events.CONTACTS_UPDATE, contactRaw);
-
-          if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled) {
-            await this.chatwootService.eventWhatsapp(
-              Events.CONTACTS_UPDATE,
-              { instanceName: this.instance.name, instanceId: this.instanceId },
-              contactRaw,
-            );
-          }
 
           await this.prismaRepository.contact.updateMany({
             where: { remoteJid: contact.remoteJid },
@@ -773,14 +689,6 @@ export class BusinessStartupService extends ChannelStartupService {
               await this.prismaRepository.messageUpdate.create({
                 data: message,
               });
-
-              if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled) {
-                this.chatwootService.eventWhatsapp(
-                  Events.MESSAGES_DELETE,
-                  { instanceName: this.instance.name, instanceId: this.instanceId },
-                  { key: key },
-                );
-              }
 
               return;
             }
@@ -1134,22 +1042,6 @@ export class BusinessStartupService extends ChannelStartupService {
       this.logger.log(messageRaw);
 
       this.sendDataWebhook(Events.SEND_MESSAGE, messageRaw);
-
-      if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled && !isIntegration) {
-        this.chatwootService.eventWhatsapp(
-          Events.SEND_MESSAGE,
-          { instanceName: this.instance.name, instanceId: this.instanceId },
-          messageRaw,
-        );
-      }
-
-      if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled && isIntegration)
-        await chatbotController.emit({
-          instance: { instanceName: this.instance.name, instanceId: this.instanceId },
-          remoteJid: messageRaw.key.remoteJid,
-          msg: messageRaw,
-          pushName: messageRaw.pushName,
-        });
 
       await this.prismaRepository.message.create({
         data: messageRaw,
