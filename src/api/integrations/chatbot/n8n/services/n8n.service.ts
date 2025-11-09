@@ -5,19 +5,14 @@ import { IntegrationSession, N8n, N8nSetting } from '@prisma/client';
 import axios from 'axios';
 
 import { BaseChatbotService } from '../../base-chatbot.service';
-import { OpenaiService } from '../../openai/services/openai.service';
 
 export class N8nService extends BaseChatbotService<N8n, N8nSetting> {
-  private openaiService: OpenaiService;
-
   constructor(
     waMonitor: WAMonitoringService,
     prismaRepository: PrismaRepository,
     configService: ConfigService,
-    openaiService: OpenaiService,
   ) {
     super(waMonitor, prismaRepository, 'N8nService', configService);
-    this.openaiService = openaiService;
   }
 
   /**
@@ -56,18 +51,8 @@ export class N8nService extends BaseChatbotService<N8n, N8nSetting> {
         apiKey: instance.token,
       };
 
-      // Handle audio messages
-      if (this.isAudioMessage(content) && msg) {
-        try {
-          this.logger.debug(`[N8n] Downloading audio for Whisper transcription`);
-          const transcription = await this.openaiService.speechToText(msg, instance);
-          if (transcription) {
-            payload.chatInput = `[audio] ${transcription}`;
-          }
-        } catch (err) {
-          this.logger.error(`[N8n] Failed to transcribe audio: ${err}`);
-        }
-      }
+      // Audio transcription removed due to OpenAI integration removal
+      // Audio messages will be sent as-is without transcription
 
       const headers: Record<string, string> = {};
       if (n8n.basicAuthUser && n8n.basicAuthPass) {

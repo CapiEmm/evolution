@@ -1,13 +1,6 @@
 import { InstanceDto } from '@api/dto/instance.dto';
 import { PrismaRepository } from '@api/repository/repository.service';
-import {
-  difyController,
-  evoaiController,
-  flowiseController,
-  n8nController,
-  openaiController,
-  typebotController,
-} from '@api/server.module';
+import { n8nController } from '@api/server.module';
 import { WAMonitoringService } from '@api/services/monitor.service';
 import { Logger } from '@config/logger.config';
 import { IntegrationSession } from '@prisma/client';
@@ -91,17 +84,7 @@ export class ChatbotController {
       isIntegration,
     };
 
-    typebotController.emit(emitData);
-
-    openaiController.emit(emitData);
-
-    difyController.emit(emitData);
-
     n8nController.emit(emitData);
-
-    evoaiController.emit(emitData);
-
-    flowiseController.emit(emitData);
   }
 
   public processDebounce(

@@ -48,18 +48,6 @@ enum TriggerOperator {
   regex
 }
 
-enum OpenaiBotType {
-  assistant
-  chatCompletion
-}
-
-enum DifyBotType {
-  chatBot
-  textGenerator
-  agent
-  workflow
-}
-
 model Instance {
   id                      String                   @id @default(cuid())
   name                    String                   @unique @db.VarChar(255)
