@@ -16,7 +16,6 @@ type ChannelDataType = {
   eventEmitter: EventEmitter2;
   prismaRepository: PrismaRepository;
   cache: CacheService;
-  chatwootCache: CacheService;
   baileysCache: CacheService;
   providerFiles: ProviderFiles;
 };
@@ -61,7 +60,6 @@ export class ChannelController {
         data.eventEmitter,
         data.prismaRepository,
         data.cache,
-        data.chatwootCache,
         data.baileysCache,
         data.providerFiles,
       );
@@ -73,7 +71,6 @@ export class ChannelController {
         data.eventEmitter,
         data.prismaRepository,
         data.cache,
-        data.chatwootCache,
         data.baileysCache,
         data.providerFiles,
       );

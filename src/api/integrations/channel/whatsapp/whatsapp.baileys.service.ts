@@ -52,7 +52,6 @@ import {
   StatusMessage,
   TypeButton,
 } from '@api/dto/sendMessage.dto';
-import { chatwootImport } from '@api/integrations/chatbot/chatwoot/utils/chatwoot-import-helper';
 import * as s3Service from '@api/integrations/storage/s3/libs/minio.server';
 import { ProviderFiles } from '@api/provider/sessions';
 import { PrismaRepository, Query } from '@api/repository/repository.service';
@@ -64,7 +63,6 @@ import { CacheEngine } from '@cache/cacheengine';
 import {
   AudioConverter,
   CacheConf,
-  Chatwoot,
   ConfigService,
   configService,
   ConfigSessionPhone,
@@ -229,11 +227,10 @@ export class BaileysStartupService extends ChannelStartupService {
     public readonly eventEmitter: EventEmitter2,
     public readonly prismaRepository: PrismaRepository,
     public readonly cache: CacheService,
-    public readonly chatwootCache: CacheService,
     public readonly baileysCache: CacheService,
     private readonly providerFiles: ProviderFiles,
   ) {
-    super(configService, eventEmitter, prismaRepository, chatwootCache);
+    super(configService, eventEmitter, prismaRepository);
     this.instance.qrcode = { count: 0 };
     this.messageProcessor.mount({
       onMessageReceive: this.messageHandle['messages.upsert'].bind(this), // Bind the method to the current context
