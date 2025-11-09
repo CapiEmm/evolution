@@ -152,5 +152,4 @@ export const MessageSubtype = [
 export const Integration = {
   WHATSAPP_BUSINESS: 'WHATSAPP-BUSINESS',
   WHATSAPP_BAILEYS: 'WHATSAPP-BAILEYS',
-  EVOLUTION: 'EVOLUTION',
 };

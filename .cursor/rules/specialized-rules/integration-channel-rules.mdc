@@ -49,52 +49,11 @@ export class ChannelController {
       return new BusinessStartupService(/* dependencies */);
     }
 
-    if (instanceData.integration === Integration.EVOLUTION) {
-      return new EvolutionStartupService(/* dependencies */);
-    }
-
     if (instanceData.integration === Integration.WHATSAPP_BAILEYS) {
       return new BaileysStartupService(/* dependencies */);
     }
 
     return null;
-  }
-}
-```
-
-### Extended Channel Controller
-```typescript
-export class EvolutionController extends ChannelController implements ChannelControllerInterface {
-  private readonly logger = new Logger('EvolutionController');
-
-  constructor(prismaRepository: PrismaRepository, waMonitor: WAMonitoringService) {
-    super(prismaRepository, waMonitor);
-  }
-
-  integrationEnabled: boolean;
-
-  public async receiveWebhook(data: any) {
-    const numberId = data.numberId;
-
-    if (!numberId) {
-      this.logger.error('WebhookService -> receiveWebhookEvolution -> numberId not found');
-      return;
-    }
-
-    const instance = await this.prismaRepository.instance.findFirst({
-      where: { number: numberId },
-    });
-
-    if (!instance) {
-      this.logger.error('WebhookService -> receiveWebhook -> instance not found');
-      return;
-    }
-
-    await this.waMonitor.waInstances[instance.name].connectToWhatsapp(data);
-
-    return {
-      status: 'success',
-    };
   }
 }
 ```
@@ -150,64 +109,6 @@ export class ChannelStartupService {
 
   public get instanceName() {
     return this.instance.name;
-  }
-}
-```
-
-### Extended Channel Service
-```typescript
-export class EvolutionStartupService extends ChannelStartupService {
-  constructor(
-    configService: ConfigService,
-    eventEmitter: EventEmitter2,
-    prismaRepository: PrismaRepository,
-    cache: CacheService,
-    chatwootCache: CacheService,
-  ) {
-    super(configService, eventEmitter, prismaRepository, cache, chatwootCache);
-  }
-
-  public async sendMessage(data: SendTextDto): Promise<any> {
-    // Evolution-specific message sending logic
-    const response = await this.evolutionApiCall('/send-message', data);
-    return response;
-  }
-
-  public async connectToWhatsapp(data: any): Promise<void> {
-    // Evolution-specific connection logic
-    this.logger.log('Connecting to Evolution API');
-    
-    // Set up webhook listeners
-    this.setupWebhookHandlers();
-    
-    // Initialize connection
-    await this.initializeConnection(data);
-  }
-
-  private async evolutionApiCall(endpoint: string, data: any): Promise<any> {
-    const config = this.configService.get<Evolution>('EVOLUTION');
-    
-    try {
-      const response = await axios.post(`${config.API_URL}${endpoint}`, data, {
-        headers: {
-          'Authorization': `Bearer ${this.instance.token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      return response.data;
-    } catch (error) {
-      this.logger.error(`Evolution API call failed: ${error.message}`);
-      throw new InternalServerErrorException('Evolution API call failed');
-    }
-  }
-
-  private setupWebhookHandlers(): void {
-    // Set up webhook event handlers
-  }
-
-  private async initializeConnection(data: any): Promise<void> {
-    // Initialize connection with Evolution API
   }
 }
 ```
@@ -431,26 +332,9 @@ export class ChannelRouter {
   constructor(configService: any, ...guards: any[]) {
     this.router = Router();
 
-    this.router.use('/', new EvolutionRouter(configService).router);
     this.router.use('/', new MetaRouter(configService).router);
     this.router.use('/baileys', new BaileysRouter(...guards).router);
   }
-}
-```
-
-### Specific Channel Router
-```typescript
-export class EvolutionRouter extends RouterBroker {
-  constructor(private readonly configService: ConfigService) {
-    super();
-    this.router
-      .post(this.routerPath('webhook'), async (req, res) => {
-        const response = await evolutionController.receiveWebhook(req.body);
-        return res.status(HttpStatus.OK).json(response);
-      });
-  }
-
-  public readonly router: Router = Router();
 }
 ```
 
@@ -471,7 +355,6 @@ type ChannelDataType = {
 export enum Integration {
   WHATSAPP_BUSINESS = 'WHATSAPP-BUSINESS',
   WHATSAPP_BAILEYS = 'WHATSAPP-BAILEYS',
-  EVOLUTION = 'EVOLUTION',
 }
 ```
 
@@ -502,51 +385,4 @@ public async sendMessage(data: SendTextDto): Promise<any> {
 
 ## Channel Testing Pattern
 
-### Channel Service Testing
-```typescript
-describe('EvolutionStartupService', () => {
-  let service: EvolutionStartupService;
-  let configService: jest.Mocked<ConfigService>;
-  let eventEmitter: jest.Mocked<EventEmitter2>;
-
-  beforeEach(() => {
-    const mockConfig = {
-      get: jest.fn().mockReturnValue({
-        API_URL: 'https://api.evolution.com',
-      }),
-    };
-
-    service = new EvolutionStartupService(
-      mockConfig as any,
-      eventEmitter,
-      prismaRepository,
-      cache,
-      chatwootCache,
-    );
-  });
-
-  describe('sendMessage', () => {
-    it('should send message successfully', async () => {
-      const data = { number: '5511999999999', text: 'Test message' };
-      
-      // Mock axios response
-      jest.spyOn(axios, 'post').mockResolvedValue({
-        data: { success: true, messageId: '123' },
-      });
-
-      const result = await service.sendMessage(data);
-
-      expect(result.success).toBe(true);
-      expect(axios.post).toHaveBeenCalledWith(
-        expect.stringContaining('/send-message'),
-        data,
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            'Authorization': expect.stringContaining('Bearer'),
-          }),
-        })
-      );
-    });
-  });
-});
-```
+Tests for channel services should mock dependencies and verify behavior for message sending, connection handling, and error cases.

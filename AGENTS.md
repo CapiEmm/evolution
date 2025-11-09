@@ -14,7 +14,7 @@ This document provides comprehensive guidelines for AI agents (Claude, GPT, Curs
   - `api/services/` – Business logic (core functionality)
   - `api/routes/` – Express route definitions (RouterBroker pattern)
   - `api/integrations/` – External service integrations
-    - `channel/` – WhatsApp providers (Baileys, Business API, Evolution)
+    - `channel/` – WhatsApp providers (Baileys, Business API)
     - `chatbot/` – AI/Bot integrations (OpenAI, Dify, Typebot, Chatwoot)
     - `event/` – Event systems (WebSocket, RabbitMQ, SQS, NATS, Pusher)
     - `storage/` – File storage (S3, MinIO)
@@ -229,8 +229,7 @@ const result = await this.prismaRepository.instance.findUnique({
 
 ### Channel Integration (WhatsApp Providers)
 - **Baileys**: WhatsApp Web with QR code authentication
-- **Business API**: Official Meta WhatsApp Business API  
-- **Evolution API**: Custom WhatsApp integration
+- **Business API**: Official Meta WhatsApp Business API
 - **Pattern**: Extend base channel service classes
 
 ### Chatbot Integration
