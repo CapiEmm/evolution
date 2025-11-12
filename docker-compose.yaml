@@ -81,4 +81,4 @@ networks:
     name: evolution-net
     driver: bridge
   dokploy-network:
-    external: true
+    external: false
