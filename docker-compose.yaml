@@ -13,8 +13,8 @@ services:
     volumes:
       - evolution_instances:/evolution/instances
     networks:
+      - coolify
       - evolution-net
-      - dokploy-network
     env_file:
       - .env
     expose:
@@ -81,5 +81,6 @@ networks:
   evolution-net:
     name: evolution-net
     driver: bridge
-  dokploy-network:
-    external: false
+  coolify:
+    external: true
+    name: coolify
