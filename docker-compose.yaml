@@ -22,7 +22,7 @@ services:
 
   frontend:
     container_name: evolution_frontend
-    image: atendai/evolution-frontend:latest
+    image: ghcr.io/evolutionapi/evolution-manager:latest
     restart: always
     ports:
       - "3000:80"
