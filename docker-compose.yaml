@@ -22,7 +22,9 @@ services:
 
   frontend:
     container_name: evolution_frontend
-    image: ghcr.io/evolutionapi/evolution-manager:latest
+    build:
+      context: https://github.com/EvolutionAPI/evolution-manager.git#main
+      dockerfile: Dockerfile
     restart: always
     ports:
       - "3000:80"
