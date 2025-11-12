@@ -22,7 +22,7 @@ services:
 
   frontend:
     container_name: evolution_frontend
-    image: evoapicloud/evolution-manager:latest
+    image: atendai/evolution-frontend:latest
     restart: always
     ports:
       - "3000:80"
