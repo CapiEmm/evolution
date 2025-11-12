@@ -1,5 +1,4 @@
 version: "3.8"
-
 services:
   api:
     container_name: evolution_api
@@ -9,28 +8,14 @@ services:
       - redis
       - evolution-postgres
     ports:
-      - "0.0.0.0:8081:8080"
+      - "8080:8080"
     volumes:
       - evolution_instances:/evolution/instances
     networks:
       - coolify
-      - evolution-net
-      - dokploy-network
     env_file:
       - .env
-    expose:
-      - "8081"
-
-  # Frontend deshabilitado temporalmente por error en nginx
-  # frontend:
-  #   container_name: evolution_frontend
-  #   image: evoapicloud/evolution-manager:latest
-  #   restart: always
-  #   ports:
-  #     - "3000:80"
-  #   networks:
-  #     - evolution-net
-
+      
   redis:
     container_name: evolution_redis
     image: redis:latest
@@ -40,15 +25,10 @@ services:
     volumes:
       - evolution_redis:/data
     networks:
-      evolution-net:
-        aliases:
-          - evolution-redis
-      dokploy-network:
-        aliases:
-          - evolution-redis
+      - coolify
     expose:
       - "6379"
-
+      
   evolution-postgres:
     container_name: evolution_postgres
     image: postgres:15
@@ -68,8 +48,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - evolution-net
-      - dokploy-network
+      - coolify
     expose:
       - "5432"
 
@@ -79,9 +58,6 @@ volumes:
   postgres_data:
 
 networks:
-  evolution-net:
-    name: evolution-net
-    driver: bridge
   coolify:
     external: true
     name: coolify
