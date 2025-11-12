@@ -15,6 +15,7 @@ services:
     networks:
       - coolify
       - evolution-net
+      - dokploy-network
     env_file:
       - .env
     expose:
